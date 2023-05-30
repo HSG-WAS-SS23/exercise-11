@@ -27,6 +27,7 @@ public class QLearner extends Artifact {
     LOGGER.info("Initialized with an action space of m="+ actionCount);
 
     qTables = new HashMap<>();
+
   }
 
 /**
@@ -61,7 +62,47 @@ public class QLearner extends Artifact {
     Double gamma = Double.valueOf(gammaObj.toString());
     Double epsilon = Double.valueOf(epsilonObj.toString());
     Integer reward = Integer.valueOf(rewardObj.toString());
-  
+
+    List<Object> goalState = Arrays.asList(goalDescription);
+
+    // initialize Q(s,a) arbitrarily
+    double[][] qTable = this.initializeQTable();
+    
+    // loop for each episode
+    for (int i = 0; i < episodes; i++) {
+
+      // initialize s_t
+      this.lab.readCurrentState();
+      // random actions
+      Random rand = new Random();
+      int randomAction = rand.nextInt(8);
+      this.lab.performAction(randomAction);
+
+      // initialize s_t again
+      int currentState = this.lab.readCurrentState();
+      // List<List<Integer>> stateList = new ArrayList<>(this.lab.stateSpace);
+      // List<Integer> currentStateDescription = stateList.get(currentState);
+
+      // loop for each step of episode
+      while(!this.lab.getCompatibleStates(goalState).contains(currentState)) {
+
+        //  choose a from s using policy derived from Q (e.g. epsilon-greedy)
+        double[] actionList = qTable[currentState];
+        int maxAction = (int) Arrays.stream(actionList).max().getAsDouble();
+        
+        // take action a, observe r, s'
+        this.lab.performAction(maxAction);
+
+        // s_t+1
+        int newState = this.lab.readCurrentState();
+
+        // Q(s,a) <- Q(s,a) + alpha[r + gamma * max Q(s',a') - Q(s,a)]
+        qTable[currentState][maxAction] = qTable[currentState][maxAction] + alpha * (reward + gamma * qTable[newState][maxAction] - qTable[currentState][maxAction]);
+        
+        // s <- s'
+        currentState = newState;
+      }
+    }
   }
 
 /**
