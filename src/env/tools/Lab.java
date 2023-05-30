@@ -198,7 +198,7 @@ public class Lab extends LearningEnvironment {
 
         if (Collections.indexOfSubList(substates, stateDescription) != -1){
           compatibleStates.add(i);
-          System.out.println(state);
+          // System.out.println(state);
         };
       }
       return compatibleStates;

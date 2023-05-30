@@ -63,7 +63,7 @@ public class QLearner extends Artifact {
     Double epsilon = Double.valueOf(epsilonObj.toString());
     Integer reward = Integer.valueOf(rewardObj.toString());
 
-    System.out.println("reward: " + reward);
+    // System.out.println("reward: " + reward);
 
     // List<Object> goalState = new ArrayList<>(Arrays.asList(goalDescription));
     // System.out.println("goalDescription[0]: " + goalDescription[0]);
@@ -83,12 +83,12 @@ public class QLearner extends Artifact {
     // loop for each episode
     for (int i = 0; i < episodes; i++) {
 
-      // // initialize s_t
-      // this.lab.readCurrentState();
-      // // random actions
-      // Random rand = new Random();
-      // int randomAction = rand.nextInt(8);
-      // this.lab.performAction(randomAction);
+      // initialize s_t
+      this.lab.readCurrentState();
+      // random actions
+      Random rand = new Random();
+      int randomAction = rand.nextInt(8);
+      this.lab.performAction(randomAction);
 
       // initialize s_t again
       int currentState = this.lab.readCurrentState();
@@ -96,22 +96,65 @@ public class QLearner extends Artifact {
       // loop for each step of episode
       while(!this.lab.getCompatibleStates(goalState).contains(currentState)) {
         
-        System.out.println("goalState"+ goalState);
+        // System.out.println("goalState"+ goalState);
 
-        System.out.println("this.lab.getCompatibleStates(goalState): " + this.lab.getCompatibleStates(goalState));
+        // System.out.println("this.lab.getCompatibleStates(goalState): " + this.lab.getCompatibleStates(goalState));
 
         //  choose a from s using policy derived from Q (e.g. epsilon-greedy)
+        // List<Integer> actions = this.lab.getApplicableActions(currentState);
+        // double[] actionsValueList = qTable[currentState];
+
+        // int maxIndex = actions.get(0);
+        // double maxValue = actionsValueList[actions.get(0)];
+
+        // for(int j = 1; i < actions.size(); i++) {
+        //     int currentIndex = actions.get(i);
+        //     if(actionsValueList[currentIndex] > maxValue) {
+        //         maxValue = actionsValueList[currentIndex];
+        //         maxIndex = currentIndex;
+        //     }
+        // }
+
+
+        // for (int action : actions) {
+          
+
+        // System.out.println("actions: " + actions);
+        // double[] actionList = new double[actions.size()];
+        // for (int j = 0; j < actions.size(); j++) {
+        //   actionList[j] = qTable[currentState][actions.get(j)];
+        // }
+        // System.out.println("actionList: " + Arrays.toString(actionList));
+        
+        // int maxActionValue = (int) Arrays.stream(actionList).max().getAsDouble();
+        // int maxAction = actions.get(Arrays.asList(actionList).indexOf(maxActionValue));
+        
+        // // take action a, observe r, s'
+        // this.lab.performAction(maxAction);
+
+         //  choose a from s using policy derived from Q (e.g. epsilon-greedy)
         List<Integer> actions = this.lab.getApplicableActions(currentState);
         System.out.println("actions: " + actions);
-        double[] actionList = new double[actions.size()];
+        double[] actionsValue = new double[actions.size()];
+        double maxValue = 0.0;
+        int maxIndex = 0;
         for (int j = 0; j < actions.size(); j++) {
-          actionList[j] = qTable[currentState][actions.get(j)];
+          actionsValue[j] = qTable[currentState][actions.get(j)];
+          if (actionsValue[j] >= maxValue) {
+            maxIndex = j;
+          }
         }
-        
-        int maxAction = (int) Arrays.stream(actionList).max().getAsDouble();
-        
+        int maxAction = actions.get(maxIndex);
+
+    
+        // int maxActionValue = (int) Arrays.stream(actionsValue).max().getAsDouble();
+        // List<Double> actionsValueList = Arrays.stream(actionsValue).boxed().collect(Collectors.toList());
+        // int maxIndex = actionsValueList.indexOf(maxActionValue);
+        // int maxAction = actionsValue.indexOf(maxActionValue);
+
         // take action a, observe r, s'
         this.lab.performAction(maxAction);
+         
 
         // s_t+1
         int newState = this.lab.readCurrentState();
