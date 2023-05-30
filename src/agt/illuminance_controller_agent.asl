@@ -37,7 +37,7 @@ task_requirements([2,3]).
 
   // creates a QLearner artifact for learning the lab Thing described by the W3C WoT TD located at URL
   makeArtifact("qlearner", "tools.QLearner", [Url], QLArtId);
-  calculateQ([Z1Level, Z2Level],5, 0.1, 0.9, 0.1, 5);
+  calculateQ([Z1Level, Z2Level],1, 0.5, 0.9, 0.2, 5);
 
   // creates a ThingArtifact artifact for reading and acting on the state of the lab Thing
   makeArtifact("lab", "wot.ThingArtifact", [Url], LabArtId);

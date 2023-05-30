@@ -181,6 +181,8 @@ public class Lab extends LearningEnvironment {
       List<Integer> compatibleStates = new ArrayList<>();
       List<List<Integer>> stateList = new ArrayList<>(stateSpace);
 
+      // System.out.println("stateList"+stateList);
+
       for (int i=0; i<stateList.size(); i++) {
         List<Integer> state = stateList.get(i);
 
@@ -250,18 +252,6 @@ public class Lab extends LearningEnvironment {
       List<List<Integer>> stateList = new ArrayList<>(stateSpace);
       return stateList.indexOf(this.currentState);
     }
-
-    // get the current state
-    // public Object[] getCurrentStateDescription(int currentState) {
-    //   List<List<Integer>> stateList = new ArrayList<>(stateSpace);
-    //   List<Integer> currentStateList = stateList.get(currentState);
-    //   Object[] currentStateDescription = new Object[2];
-    //   currentStateDescription[0] = currentStateList.get(0);
-
-    //   currentStateDescription = stateList.get(currentState);
-
-    //   return stateList.get(currentState);
-    // }
 
     /**
     * @see {@link LearningEnvironment#getApplicableActions(int)}

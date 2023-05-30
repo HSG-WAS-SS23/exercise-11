@@ -63,7 +63,19 @@ public class QLearner extends Artifact {
     Double epsilon = Double.valueOf(epsilonObj.toString());
     Integer reward = Integer.valueOf(rewardObj.toString());
 
-    List<Object> goalState = Arrays.asList(goalDescription);
+    System.out.println("reward: " + reward);
+
+    // List<Object> goalState = new ArrayList<>(Arrays.asList(goalDescription));
+    // System.out.println("goalDescription[0]: " + goalDescription[0]);
+
+    // List<Object> goalState = new ArrayList<>();
+
+    // System.out.println("goalDescription[0].getClass().getName()" + goalDescription[0].getClass().getName());
+    // goalState.add(2);
+    // goalState.add(3);
+
+    List<Object> goalState = Arrays.asList(((Byte)goalDescription[0]).intValue(), ((Byte)goalDescription[1]).intValue());
+
 
     // initialize Q(s,a) arbitrarily
     double[][] qTable = this.initializeQTable();
@@ -71,21 +83,31 @@ public class QLearner extends Artifact {
     // loop for each episode
     for (int i = 0; i < episodes; i++) {
 
-      // initialize s_t
-      this.lab.readCurrentState();
-      // random actions
-      Random rand = new Random();
-      int randomAction = rand.nextInt(8);
-      this.lab.performAction(randomAction);
+      // // initialize s_t
+      // this.lab.readCurrentState();
+      // // random actions
+      // Random rand = new Random();
+      // int randomAction = rand.nextInt(8);
+      // this.lab.performAction(randomAction);
 
       // initialize s_t again
       int currentState = this.lab.readCurrentState();
 
       // loop for each step of episode
       while(!this.lab.getCompatibleStates(goalState).contains(currentState)) {
+        
+        System.out.println("goalState"+ goalState);
+
+        System.out.println("this.lab.getCompatibleStates(goalState): " + this.lab.getCompatibleStates(goalState));
 
         //  choose a from s using policy derived from Q (e.g. epsilon-greedy)
-        double[] actionList = qTable[currentState];
+        List<Integer> actions = this.lab.getApplicableActions(currentState);
+        System.out.println("actions: " + actions);
+        double[] actionList = new double[actions.size()];
+        for (int j = 0; j < actions.size(); j++) {
+          actionList[j] = qTable[currentState][actions.get(j)];
+        }
+        
         int maxAction = (int) Arrays.stream(actionList).max().getAsDouble();
         
         // take action a, observe r, s'
@@ -99,8 +121,15 @@ public class QLearner extends Artifact {
         
         // s <- s'
         currentState = newState;
+
+        System.out.println("Episode: " + i + " State: " + currentState + " Action: " + maxAction);
+
+        // printQTable(qTable);
+
+
       }
     }
+    this.qTables.put(goalState.hashCode(), qTable);
   }
 
 /**
@@ -118,19 +147,36 @@ public class QLearner extends Artifact {
   public void getActionFromState(Object[] goalDescription, Object[] currentStateDescription,
       OpFeedbackParam<String> nextBestActionTag, OpFeedbackParam<Object[]> nextBestActionPayloadTags,
       OpFeedbackParam<Object[]> nextBestActionPayload) {
+
+      double[][] qTable = this.qTables.get(Arrays.asList(goalDescription).hashCode());
+      List<Integer> currentStates = this.lab.getCompatibleStates(Arrays.asList(currentStateDescription));
+      List<List<Integer>> stateList = new ArrayList<>(this.lab.stateSpace);
+      int currentState = stateList.indexOf(currentStates);
+
+      double[] actions = qTable[currentState];
+      int maxAction = (int) Arrays.stream(actions).max().getAsDouble();
+
+      Action a = this.lab.actionSpace.get(maxAction);
+
+      nextBestActionTag.set(a.getActionTag()); 
+      Object payloadTags[] = a.getPayloadTags();
+      nextBestActionPayloadTags.set(payloadTags);
+      Object payload[] = a.getPayload();
+      nextBestActionPayload.set(payload);
          
-        // remove the following upon implementing Task 2.3!
+      //   // remove the following upon implementing Task 2.3!
 
-        // sets the semantic annotation of the next best action to be returned 
-        nextBestActionTag.set("http://example.org/was#SetZ1Light");
+      //   // sets the semantic annotation of the next best action to be returned 
+      //   nextBestActionTag.set("http://example.org/was#SetZ1Light");
 
-        // sets the semantic annotation of the payload of the next best action to be returned 
-        Object payloadTags[] = { "Z1Light" };
-        nextBestActionPayloadTags.set(payloadTags);
+      //   // sets the semantic annotation of the payload of the next best action to be returned 
+      //   Object payloadTags[] = { "Z1Light" };
+      //   nextBestActionPayloadTags.set(payloadTags);
 
-        // sets the payload of the next best action to be returned 
-        Object payload[] = { true };
-        nextBestActionPayload.set(payload);
+      //   // sets the payload of the next best action to be returned 
+      //   Object payload[] = { true };
+      //   nextBestActionPayload.set(payload);
+
       }
 
     /**
