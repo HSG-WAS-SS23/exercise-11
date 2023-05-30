@@ -80,8 +80,6 @@ public class QLearner extends Artifact {
 
       // initialize s_t again
       int currentState = this.lab.readCurrentState();
-      // List<List<Integer>> stateList = new ArrayList<>(this.lab.stateSpace);
-      // List<Integer> currentStateDescription = stateList.get(currentState);
 
       // loop for each step of episode
       while(!this.lab.getCompatibleStates(goalState).contains(currentState)) {
