@@ -98,7 +98,6 @@ public class QLearner extends Artifact {
             maxIndex = j;
           }
         }
-        System.out.println("Actions Value: " + Arrays.toString(actionsValue));
         int maxAction = actions.get(maxIndex);
 
         // take action a, observe r, s'
@@ -116,7 +115,6 @@ public class QLearner extends Artifact {
 
         // compute max Q(s',a')
         List<Integer> actionsNew = this.lab.getApplicableActions(newState);
-        // System.out.println("Actions New: " + actionsNew);
         double[] actionsValueNew = new double[actionsNew.size()];
         double maxValueNew = 0.0;
         int maxIndexNew = 0;
@@ -129,8 +127,6 @@ public class QLearner extends Artifact {
         int maxActionNew = actions.get(maxIndexNew);
 
         // Q(s,a) <- Q(s,a) + alpha[r + gamma * max Q(s',a') - Q(s,a)]
-        System.out.println("QTable Current: " + qTable[currentState][maxAction]);
-        System.out.println("QTable New: " + qTable[newState][maxIndexNew]);
         qTable[currentState][maxAction] = qTable[currentState][maxAction] + alpha * (reward + gamma * qTable[newState][maxActionNew] - qTable[currentState][maxAction]);
         
         // s <- s'
@@ -139,8 +135,6 @@ public class QLearner extends Artifact {
         System.out.println("Episode: " + i + " State: " + currentState + " Action: " + maxAction);
 
         // printQTable(qTable);
-
-
       }
     }
     this.qTables.put(goalState.hashCode(), qTable);
@@ -183,7 +177,18 @@ public class QLearner extends Artifact {
       // get the action with the highest Q value
       double[] actions = qTable[currentState];
       double maxValue = Arrays.stream(actions).max().getAsDouble();
-      int actionIndex = Arrays.asList(actions).indexOf(maxValue);
+      int actionIndex = -1;
+      
+      // Find the index of the maximum value
+      for (int i = 0; i < actions.length; i++) {
+          if (actions[i] == maxValue) {
+              actionIndex = i;
+              break;
+          } else {
+            System.err.println("Error: maxValue " + maxValue + " not found in actions array.");
+          }
+      } 
+
       Action a = this.lab.actionSpace.get(actionIndex);
 
       nextBestActionTag.set(a.getActionTag()); 
