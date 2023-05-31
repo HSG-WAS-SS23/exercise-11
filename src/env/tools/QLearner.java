@@ -63,19 +63,10 @@ public class QLearner extends Artifact {
     Double epsilon = Double.valueOf(epsilonObj.toString());
     Integer reward = Integer.valueOf(rewardObj.toString());
 
-    // System.out.println("reward: " + reward);
+    List<List<Integer>> stateList = new ArrayList<>(this.lab.stateSpace);
 
-    // List<Object> goalState = new ArrayList<>(Arrays.asList(goalDescription));
-    // System.out.println("goalDescription[0]: " + goalDescription[0]);
-
-    // List<Object> goalState = new ArrayList<>();
-
-    // System.out.println("goalDescription[0].getClass().getName()" + goalDescription[0].getClass().getName());
-    // goalState.add(2);
-    // goalState.add(3);
-
+    // convert goal description to a list
     List<Object> goalState = Arrays.asList(((Byte)goalDescription[0]).intValue(), ((Byte)goalDescription[1]).intValue());
-
 
     // initialize Q(s,a) arbitrarily
     double[][] qTable = this.initializeQTable();
@@ -95,46 +86,9 @@ public class QLearner extends Artifact {
 
       // loop for each step of episode
       while(!this.lab.getCompatibleStates(goalState).contains(currentState)) {
-        
-        // System.out.println("goalState"+ goalState);
 
-        // System.out.println("this.lab.getCompatibleStates(goalState): " + this.lab.getCompatibleStates(goalState));
-
-        //  choose a from s using policy derived from Q (e.g. epsilon-greedy)
-        // List<Integer> actions = this.lab.getApplicableActions(currentState);
-        // double[] actionsValueList = qTable[currentState];
-
-        // int maxIndex = actions.get(0);
-        // double maxValue = actionsValueList[actions.get(0)];
-
-        // for(int j = 1; i < actions.size(); i++) {
-        //     int currentIndex = actions.get(i);
-        //     if(actionsValueList[currentIndex] > maxValue) {
-        //         maxValue = actionsValueList[currentIndex];
-        //         maxIndex = currentIndex;
-        //     }
-        // }
-
-
-        // for (int action : actions) {
-          
-
-        // System.out.println("actions: " + actions);
-        // double[] actionList = new double[actions.size()];
-        // for (int j = 0; j < actions.size(); j++) {
-        //   actionList[j] = qTable[currentState][actions.get(j)];
-        // }
-        // System.out.println("actionList: " + Arrays.toString(actionList));
-        
-        // int maxActionValue = (int) Arrays.stream(actionList).max().getAsDouble();
-        // int maxAction = actions.get(Arrays.asList(actionList).indexOf(maxActionValue));
-        
-        // // take action a, observe r, s'
-        // this.lab.performAction(maxAction);
-
-         //  choose a from s using policy derived from Q (e.g. epsilon-greedy)
+        // choose a from s using policy derived from Q (e.g. epsilon-greedy)
         List<Integer> actions = this.lab.getApplicableActions(currentState);
-        System.out.println("actions: " + actions);
         double[] actionsValue = new double[actions.size()];
         double maxValue = 0.0;
         int maxIndex = 0;
@@ -144,23 +98,40 @@ public class QLearner extends Artifact {
             maxIndex = j;
           }
         }
+        System.out.println("Actions Value: " + Arrays.toString(actionsValue));
         int maxAction = actions.get(maxIndex);
-
-    
-        // int maxActionValue = (int) Arrays.stream(actionsValue).max().getAsDouble();
-        // List<Double> actionsValueList = Arrays.stream(actionsValue).boxed().collect(Collectors.toList());
-        // int maxIndex = actionsValueList.indexOf(maxActionValue);
-        // int maxAction = actionsValue.indexOf(maxActionValue);
 
         // take action a, observe r, s'
         this.lab.performAction(maxAction);
          
-
         // s_t+1
         int newState = this.lab.readCurrentState();
 
+        // get reward from s_t+1
+        List<Integer> newStateList = stateList.get(newState);
+        int newZ1Level = newStateList.get(0);
+        int newZ2Level = newStateList.get(1);
+        reward = newZ1Level + newZ2Level - (Integer) goalState.get(0) - (Integer) goalState.get(1);
+        reward = 1/ (reward * -1)+1;
+
+        // compute max Q(s',a')
+        List<Integer> actionsNew = this.lab.getApplicableActions(newState);
+        // System.out.println("Actions New: " + actionsNew);
+        double[] actionsValueNew = new double[actionsNew.size()];
+        double maxValueNew = 0.0;
+        int maxIndexNew = 0;
+        for (int j = 0; j < actions.size(); j++) {
+          actionsValueNew[j] = qTable[newState][actions.get(j)];
+          if (actionsValueNew[j] >= maxValueNew) {
+            maxIndexNew = j;
+          }
+        }
+        int maxActionNew = actions.get(maxIndexNew);
+
         // Q(s,a) <- Q(s,a) + alpha[r + gamma * max Q(s',a') - Q(s,a)]
-        qTable[currentState][maxAction] = qTable[currentState][maxAction] + alpha * (reward + gamma * qTable[newState][maxAction] - qTable[currentState][maxAction]);
+        System.out.println("QTable Current: " + qTable[currentState][maxAction]);
+        System.out.println("QTable New: " + qTable[newState][maxIndexNew]);
+        qTable[currentState][maxAction] = qTable[currentState][maxAction] + alpha * (reward + gamma * qTable[newState][maxActionNew] - qTable[currentState][maxAction]);
         
         // s <- s'
         currentState = newState;
@@ -191,34 +162,35 @@ public class QLearner extends Artifact {
       OpFeedbackParam<String> nextBestActionTag, OpFeedbackParam<Object[]> nextBestActionPayloadTags,
       OpFeedbackParam<Object[]> nextBestActionPayload) {
 
-      double[][] qTable = this.qTables.get(Arrays.asList(goalDescription).hashCode());
-      List<Integer> currentStates = this.lab.getCompatibleStates(Arrays.asList(currentStateDescription));
+      // convert goal description to a list
+      List<Object> goalState = Arrays.asList(((Byte)goalDescription[0]).intValue(), ((Byte)goalDescription[1]).intValue());
+      double[][] qTable = this.qTables.get(goalState.hashCode());
+
+      // convert current state description to a list
+      List<Integer> currentStateList = new ArrayList<>();
+      currentStateList.add(((Byte)currentStateDescription[0]).intValue());
+      currentStateList.add(((Byte)currentStateDescription[1]).intValue());
+      currentStateList.add(((Boolean)currentStateDescription[2]).booleanValue() ? 1 : 0);
+      currentStateList.add(((Boolean)currentStateDescription[3]).booleanValue() ? 1 : 0);
+      currentStateList.add(((Boolean)currentStateDescription[4]).booleanValue() ? 1 : 0);
+      currentStateList.add(((Boolean)currentStateDescription[5]).booleanValue() ? 1 : 0);
+      currentStateList.add(((Byte)currentStateDescription[6]).intValue());
+
+      // get the index of the current state from the state space
       List<List<Integer>> stateList = new ArrayList<>(this.lab.stateSpace);
-      int currentState = stateList.indexOf(currentStates);
+      int currentState = stateList.indexOf(currentStateList);
 
+      // get the action with the highest Q value
       double[] actions = qTable[currentState];
-      int maxAction = (int) Arrays.stream(actions).max().getAsDouble();
-
-      Action a = this.lab.actionSpace.get(maxAction);
+      double maxValue = Arrays.stream(actions).max().getAsDouble();
+      int actionIndex = Arrays.asList(actions).indexOf(maxValue);
+      Action a = this.lab.actionSpace.get(actionIndex);
 
       nextBestActionTag.set(a.getActionTag()); 
       Object payloadTags[] = a.getPayloadTags();
       nextBestActionPayloadTags.set(payloadTags);
       Object payload[] = a.getPayload();
       nextBestActionPayload.set(payload);
-         
-      //   // remove the following upon implementing Task 2.3!
-
-      //   // sets the semantic annotation of the next best action to be returned 
-      //   nextBestActionTag.set("http://example.org/was#SetZ1Light");
-
-      //   // sets the semantic annotation of the payload of the next best action to be returned 
-      //   Object payloadTags[] = { "Z1Light" };
-      //   nextBestActionPayloadTags.set(payloadTags);
-
-      //   // sets the payload of the next best action to be returned 
-      //   Object payload[] = { true };
-      //   nextBestActionPayload.set(payload);
 
       }
 

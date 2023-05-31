@@ -12,6 +12,9 @@
 // that describes a lab environment to be learnt
 learning_lab_environment("https://raw.githubusercontent.com/Interactions-HSG/example-tds/was/tds/interactions-lab.ttl").
 
+// real world lab environment
+// learning_lab_environment("https://raw.githubusercontent.com/Interactions-HSG/example-tds/was/tds/interactions-lab-real.ttl").
+
 // the agent believes that the task that takes place in the 1st workstation requires an indoor illuminance
 // level of Rank 2, and the task that takes place in the 2nd workstation requires an indoor illumincance 
 // level of Rank 3. Modify the belief so that the agent can learn to handle different goals.
@@ -33,11 +36,11 @@ task_requirements([2,3]).
   & task_requirements([Z1Level, Z2Level]) <-
 
   .print("Hello world");
-  .print("I want to achieve Z1Level=", Z1Level, " and Z2Level=",Z2Level);
+  .print("I want to achieve Z1Level=", Z1Level, " and Z2Level=", Z2Level);
 
   // creates a QLearner artifact for learning the lab Thing described by the W3C WoT TD located at URL
   makeArtifact("qlearner", "tools.QLearner", [Url], QLArtId);
-  calculateQ([Z1Level, Z2Level],1, 0.5, 0.9, 0.2, 5);
+  calculateQ([Z1Level, Z2Level],1, 0.2, 0.7, 0.3, 0);
 
   // creates a ThingArtifact artifact for reading and acting on the state of the lab Thing
   makeArtifact("lab", "wot.ThingArtifact", [Url], LabArtId);
@@ -47,5 +50,5 @@ task_requirements([2,3]).
   getActionFromState([1,1], [0, 0, false, false, false, false, 3], ActionTag, PayloadTags, Payload);
 
   // example use of the invokeAction operation of the ThingArtifact 
-  //invokeAction(ActionTag, PayloadTags, Payload)
+  invokeAction(ActionTag, PayloadTags, Payload)
   .
